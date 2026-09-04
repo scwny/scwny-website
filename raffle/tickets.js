@@ -22,7 +22,7 @@ export function parseTickets(text) {
   for (const token of tokens) {
     if (/^\d+$/.test(token)) {
       const n = Number(token);
-      if (n > 0 && numbers.size < MAX_TOTAL) numbers.add(n);
+      if (Number.isSafeInteger(n) && n > 0 && numbers.size < MAX_TOTAL) numbers.add(n);
       else invalid.push(token);
       continue;
     }
@@ -33,7 +33,13 @@ export function parseTickets(text) {
       let hi = Number(range[2]);
       if (lo > hi) [lo, hi] = [hi, lo];
       const count = hi - lo + 1;
-      if (lo <= 0 || count > MAX_RANGE || numbers.size + count > MAX_TOTAL) {
+      if (
+        !Number.isSafeInteger(lo) ||
+        !Number.isSafeInteger(hi) ||
+        lo <= 0 ||
+        count > MAX_RANGE ||
+        numbers.size + count > MAX_TOTAL
+      ) {
         invalid.push(token);
         continue;
       }

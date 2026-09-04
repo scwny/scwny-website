@@ -73,3 +73,17 @@ test('ticketMatches is false with no saved numbers', () => {
   assert.equal(ticketMatches('104', new Set()), false);
   assert.equal(ticketMatches('104', undefined), false);
 });
+
+test('numbers beyond the safe-integer range are rejected instead of hanging', () => {
+  const range = parseTickets('99999999999999999999-99999999999999999999');
+  assert.equal(range.numbers.size, 0);
+  assert.deepEqual(range.invalid, ['99999999999999999999-99999999999999999999']);
+
+  const single = parseTickets('99999999999999999999');
+  assert.equal(single.numbers.size, 0);
+  assert.deepEqual(single.invalid, ['99999999999999999999']);
+
+  const edge = parseTickets('9007199254740993-9007199254740994');
+  assert.equal(edge.numbers.size, 0);
+  assert.deepEqual(edge.invalid, ['9007199254740993-9007199254740994']);
+});
