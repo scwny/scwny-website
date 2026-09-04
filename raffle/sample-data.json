@@ -1,0 +1,18 @@
+{
+  "ok": true,
+  "updated": "2026-09-04T23:10:00.000Z",
+  "settings": {
+    "Title": "2026 Meat Raffle (demo)",
+    "Message": "This is sample data. Drawing starts at 7:00 PM."
+  },
+  "rows": [
+    { "Basket": "1", "Description": "Italian Night", "Winning Ticket": "104", "Details": "Pasta, sauce, olive oil, and a gift card to Chef's.", "Donated By": "The Lupiani Family", "Photo": "" },
+    { "Basket": "2", "Description": "Movie Night", "Winning Ticket": "17", "Details": "", "Donated By": "", "Photo": "https://picsum.photos/seed/scwny2/400/300" },
+    { "Basket": "3", "Description": "Coffee Lover", "Winning Ticket": "", "Details": "Two pounds of beans, a grinder, and two mugs.", "Donated By": "Spot Coffee", "Photo": "" },
+    { "Basket": "4", "Description": "Grill Master", "Winning Ticket": "250 (Jane)", "Details": "", "Donated By": "", "Photo": "" },
+    { "Basket": "5", "Description": "Spa Day", "Winning Ticket": "", "Details": "", "Donated By": "", "Photo": "" },
+    { "Basket": "10", "Description": "Bills Fan Pack", "Winning Ticket": "9", "Details": "Signed mini helmet and two tickets.", "Donated By": "", "Photo": "https://picsum.photos/seed/scwny10/400/300" },
+    { "Basket": "5A", "Description": "Kids Craft Corner", "Winning Ticket": "", "Details": "", "Donated By": "", "Photo": "" },
+    { "Basket": "6", "Description": "Wine and Cheese", "Winning Ticket": "241", "Details": "", "Donated By": "Premier Wine", "Photo": "" }
+  ]
+}

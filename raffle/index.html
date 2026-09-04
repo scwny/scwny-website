@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SCWNY Raffle Results</title>
+  <meta name="description" content="Live basket raffle results for the Skating Club of Western New York.">
+  <link rel="icon" href="./SCWNYLOGO.png">
+  <link rel="stylesheet" href="./raffle.css">
+</head>
+<body>
+  <header class="site-header">
+    <img class="logo" src="./SCWNYLOGO.png" alt="Skating Club of Western New York">
+    <h1 id="title">Raffle Results</h1>
+    <p id="message" class="banner" hidden></p>
+  </header>
+
+  <main>
+    <p id="status" class="status" aria-live="polite">Loading results…</p>
+    <p id="error" class="error" role="alert" hidden></p>
+
+    <section class="panel">
+      <label for="tickets">My ticket numbers</label>
+      <input id="tickets" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"
+             placeholder="e.g. 97-104, 241, 250-252">
+      <p id="tickets-help" class="help"></p>
+    </section>
+
+    <section id="wins" class="panel wins" hidden>
+      <h2 id="wins-heading"></h2>
+      <ul id="wins-list"></ul>
+    </section>
+
+    <section class="panel">
+      <label for="search" class="visually-hidden">Search baskets</label>
+      <input id="search" type="search" autocomplete="off" placeholder="Search baskets…">
+    </section>
+
+    <section id="results" class="results" aria-busy="true"></section>
+  </main>
+
+  <footer class="site-footer">Skating Club of Western New York</footer>
+
+  <script type="module" src="./raffle.js"></script>
+</body>
+</html>
