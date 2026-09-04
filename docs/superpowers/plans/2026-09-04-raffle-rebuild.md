@@ -1380,7 +1380,7 @@ With `python -m http.server 8000` running from the repo root, open `http://local
 Expected:
 - Heading reads "2026 Meat Raffle (demo)" and the banner shows the sample message.
 - Status reads "5 of 8 baskets drawn · Updated <time>".
-- Rows are ordered 1, 2, 3, 4, 5, 6, 10, 5A.
+- Rows are ordered 1, 2, 3, 4, 5, 5A, 6, 10. Labels with a numeric prefix collate by that number.
 - Baskets 3, 5, and 5A show "Not drawn yet" in muted italics.
 - Baskets 2 and 10 show a photo thumbnail. A Photo column header appears on wide screens.
 - Basket 1, 3, 6, and 10 have a "Details" expander.
@@ -1533,7 +1533,7 @@ python -m http.server 8000
 
 Test a new Apps Script deployment without committing: `?data=<web app url>`.
 
-Run the unit tests (Node 18 or newer):
+Run the unit tests (Node 22 or newer):
 
 ```
 npm test
