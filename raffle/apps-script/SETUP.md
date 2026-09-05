@@ -52,6 +52,18 @@ publishing by serving the repo locally and opening
 `http://localhost:8765/raffle/?data=PASTE_URL_HERE`. The live site ignores the `?data=`
 parameter on purpose, so a shared link cannot swap in someone else's data.
 
+## Formatting text
+
+Description, Details, Donated By, Title, and Message understand a little formatting:
+
+- `**bold**` and `*italic*`
+- A link: `[Premier Wine](https://premierwine.com)`, or just paste a full `https://` address
+- Press **Ctrl+Enter** inside a cell to start a new line. A blank line starts a new paragraph.
+- Lines starting with `- ` become a bulleted list (Details and Message)
+
+Anything else, including HTML tags, is shown exactly as typed. Basket and Winning Ticket are never
+formatted because the page sorts and matches on them.
+
 ## During the event
 
 - Give volunteers **edit** access to the Sheet. They do not need access to the script.

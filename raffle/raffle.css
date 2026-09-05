@@ -104,6 +104,10 @@ table.list { width: 100%; border-collapse: collapse; }
 details { margin-top: 4px; }
 details summary { cursor: pointer; color: var(--accent); font-size: 0.95rem; }
 details p { margin: 6px 0 0; }
+.details-body ul { margin: 6px 0 0; padding-left: 1.2em; }
+.banner p { margin: 0; }
+.banner p + p, .banner ul { margin-top: 6px; }
+.banner ul { margin-bottom: 0; padding-left: 1.2em; text-align: left; }
 .donor { color: var(--muted); }
 
 .thumb img { display: block; width: 120px; max-width: 100%; height: auto; border-radius: 8px; }

@@ -16,8 +16,8 @@ CSS, and ES modules with no build step and no runtime dependencies. Deploy by pu
 ## Structure
 
 - `index.html` is only a meta-refresh redirect to the club's main site.
-- `raffle/` is the only real page. `raffle.js` owns the DOM, fetch, and polling. `tickets.js`, `data.js`, and
-  `source.js` are pure modules with no DOM access; keep logic that can be unit tested in those.
+- `raffle/` is the only real page. `raffle.js` owns the DOM, fetch, and polling. `tickets.js`, `data.js`, `source.js`, and
+  `markdown.js` are pure modules with no DOM access; keep logic that can be unit tested in those.
 - The data source is a Google Apps Script web app that dumps a Google Sheet as JSON. The script returns every
   column keyed by header text, so the page, not the script, decides which columns matter. Header matching in
   `data.js` is case-insensitive.
@@ -32,5 +32,6 @@ CSS, and ES modules with no build step and no runtime dependencies. Deploy by pu
   added there, or it is served at www.scwny.org/<path>.
 - Apps Script cannot set HTTP status codes. Failures come back as `{ "ok": false, "error": "..." }` with status 200,
   so always check `ok`.
-- Never render Sheet content with `innerHTML`. Use `textContent`; photo URLs must start with `http(s)://`.
+- Never render Sheet content with `innerHTML`. Use `textContent`, or `markdown.js` plus the node renderers in
+  `raffle.js` for formatted text. Photo and link URLs must start with `http(s)://`.
 - Errors render inline. Never use `alert`.

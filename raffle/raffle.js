@@ -2,6 +2,7 @@ import { DATA_URL, REFRESH_SECONDS } from './config.js';
 import { parseTickets, ticketMatches } from './tickets.js';
 import { normalizeRows, normalizeSettings, photoUrls, summarize } from './data.js';
 import { resolveDataUrl } from './source.js';
+import { parseInline, parseBlocks, plainText } from './markdown.js';
 
 const STORAGE_KEY = 'scwny.raffle.myTickets';
 const MAX_BACKOFF_SECONDS = 120;
@@ -138,6 +139,58 @@ document.addEventListener('visibilitychange', () => {
 
 // ---------- rendering ----------
 
+// Formatted text. markdown.js parses Sheet text into plain objects; these build
+// DOM nodes from them one at a time. Nothing here parses HTML.
+
+function renderInline(nodes, parent) {
+  for (const node of nodes) {
+    if (node.type === 'text') {
+      parent.appendChild(document.createTextNode(node.text));
+    } else if (node.type === 'br') {
+      parent.appendChild(document.createElement('br'));
+    } else if (node.type === 'strong' || node.type === 'em') {
+      const element = document.createElement(node.type);
+      renderInline(node.children, element);
+      parent.appendChild(element);
+    } else if (node.type === 'link') {
+      const link = document.createElement('a');
+      link.href = node.href;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      renderInline(node.children, link);
+      parent.appendChild(link);
+    }
+  }
+}
+
+function renderBlocks(blocks, parent) {
+  for (const block of blocks) {
+    if (block.type === 'paragraph') {
+      const p = document.createElement('p');
+      renderInline(block.children, p);
+      parent.appendChild(p);
+    } else if (block.type === 'list') {
+      const ul = document.createElement('ul');
+      for (const item of block.items) {
+        const li = document.createElement('li');
+        renderInline(item, li);
+        ul.appendChild(li);
+      }
+      parent.appendChild(ul);
+    }
+  }
+}
+
+function setInline(element, text) {
+  element.replaceChildren();
+  renderInline(parseInline(text), element);
+}
+
+function setBlocks(element, text) {
+  element.replaceChildren();
+  renderBlocks(parseBlocks(text), element);
+}
+
 function isWin(row) {
   return row.ticket !== '' && ticketMatches(row.ticket, state.myNumbers);
 }
@@ -147,9 +200,9 @@ function formatTime(date) {
 }
 
 function render() {
-  document.title = `${state.settings.title} · SCWNY`;
-  el.title.textContent = state.settings.title;
-  el.message.textContent = state.settings.message;
+  document.title = `${plainText(state.settings.title)} · SCWNY`;
+  setInline(el.title, state.settings.title);
+  setBlocks(el.message, state.settings.message);
   el.message.hidden = state.settings.message === '';
 
   const { total, drawn } = summarize(state.rows);
@@ -196,7 +249,9 @@ function renderWins() {
   el.winsList.replaceChildren(
     ...wins.map((row) => {
       const li = document.createElement('li');
-      li.textContent = `Basket ${row.basket} · ${row.description} · Ticket ${row.ticket}`;
+      li.append(`Basket ${row.basket} · `);
+      renderInline(parseInline(row.description), li);
+      li.append(` · Ticket ${row.ticket}`);
       return li;
     }),
   );
@@ -205,7 +260,7 @@ function renderWins() {
 
 function matchesSearch(row, query) {
   if (!query) return true;
-  return [row.basket, row.description, row.ticket].some((value) => value.toLowerCase().includes(query));
+  return [row.basket, plainText(row.description), row.ticket].some((value) => value.toLowerCase().includes(query));
 }
 
 function openDetailBaskets() {
@@ -267,7 +322,7 @@ function renderRow(row, anyPhoto, keepOpen) {
   desc.className = 'desc';
   const title = document.createElement('div');
   title.className = 'desc-title';
-  title.textContent = row.description;
+  renderInline(parseInline(row.description), title);
   if (win) {
     const badge = document.createElement('span');
     badge.className = 'badge';
@@ -284,14 +339,16 @@ function renderRow(row, anyPhoto, keepOpen) {
     summary.textContent = 'Details';
     details.appendChild(summary);
     if (row.details !== '') {
-      const p = document.createElement('p');
-      p.textContent = row.details;
-      details.appendChild(p);
+      const body = document.createElement('div');
+      body.className = 'details-body';
+      renderBlocks(parseBlocks(row.details), body);
+      details.appendChild(body);
     }
     if (row.donatedBy !== '') {
       const p = document.createElement('p');
       p.className = 'donor';
-      p.textContent = `Donated by ${row.donatedBy}`;
+      p.append('Donated by ');
+      renderInline(parseInline(row.donatedBy), p);
       details.appendChild(p);
     }
     desc.appendChild(details);

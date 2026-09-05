@@ -33,6 +33,9 @@ Drive share link or any image URL. Drive files must be shared as Anyone with the
 Tab **Settings**, two columns: `Title` is the page heading, `Message` is an optional
 banner.
 
+Text cells accept a small Markdown subset: `**bold**`, `*italic*`, `[label](https://url)`,
+line breaks, and `- ` bullet lists. HTML is shown literally. See the setup checklist.
+
 ## Files
 
 | Path | Purpose |
@@ -43,6 +46,7 @@ banner.
 | `raffle/raffle.js` | Fetching, live refresh, rendering, saved tickets. |
 | `raffle/tickets.js` | Parses ticket input like `97-104, 241` and matches winners. |
 | `raffle/data.js` | Maps Sheet headers to fields, sorts rows, rewrites photo links. |
+| `raffle/markdown.js` | Parses a small Markdown subset (bold, italic, links, lists) for text cells. |
 | `raffle/source.js` | Decides the data URL: config, `?demo=1`, or a localhost-only `?data=` override. |
 | `raffle/config.js` | The Apps Script URL and refresh interval. |
 | `raffle/raffle.css` | Styles. Cards on phones, a table on wide screens. |

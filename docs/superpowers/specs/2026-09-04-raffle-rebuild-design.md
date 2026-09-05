@@ -190,9 +190,13 @@ thumbnail and `sz=w1600` for the full-size link. Any other URL is used as-is.
 
 ### Security
 
-All Sheet content is rendered with `textContent` or equivalent escaping. Photo URLs
-are only placed in `src` and `href` attributes and must start with `http://` or
-`https://`, otherwise they are ignored.
+All Sheet content is rendered as DOM text nodes; nothing from the Sheet is parsed as
+HTML. Description, Details, Donated By, Title, and Message pass through `markdown.js`,
+a restricted parser (bold, italic, http(s) links, line breaks, paragraphs, bullet lists)
+whose output is built into elements one node at a time; HTML typed into a cell shows
+literally. Basket and Winning Ticket are never formatted. Photo and link URLs are only
+placed in `src` and `href` attributes and must start with `http://` or `https://`,
+otherwise they are ignored or shown as text.
 
 ## Testing
 
