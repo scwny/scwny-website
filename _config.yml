@@ -1,0 +1,11 @@
+# GitHub Pages builds this repo with Jekyll. Everything listed here is kept out
+# of the published site at www.scwny.org. It exists for maintainers, not visitors.
+# Any new file or folder that is not part of the website must be added here.
+exclude:
+  - README.md
+  - CLAUDE.md
+  - package.json
+  - package-lock.json
+  - docs
+  - tests
+  - raffle/apps-script

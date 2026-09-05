@@ -73,4 +73,6 @@ npm test
 
 ## Deploying
 
-Push to `main`. GitHub Pages serves the repo root directly.
+Push to `main`. GitHub Pages builds the repo with Jekyll and publishes everything except the
+paths listed under `exclude` in `_config.yml` (docs, tests, README, package files, and the
+Apps Script folder). Add any new non-site file to that list or it will be served publicly.

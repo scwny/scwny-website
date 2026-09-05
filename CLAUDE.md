@@ -28,6 +28,8 @@ CSS, and ES modules with no build step and no runtime dependencies. Deploy by pu
 ## Gotchas
 
 - Directory names double as URLs (`/raffle`), so renaming a folder changes the public link.
+- `_config.yml` `exclude` decides what GitHub Pages publishes. A new file that is not part of the website must be
+  added there, or it is served at www.scwny.org/<path>.
 - Apps Script cannot set HTTP status codes. Failures come back as `{ "ok": false, "error": "..." }` with status 200,
   so always check `ok`.
 - Never render Sheet content with `innerHTML`. Use `textContent`; photo URLs must start with `http(s)://`.
