@@ -33,11 +33,15 @@ const state = {
 
 // ---------- data source ----------
 
+function isLocalHost() {
+  return ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
+}
+
 function resolveDataUrl() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('demo') === '1') return './sample-data.json';
   const override = params.get('data');
-  if (override && /^https?:\/\//i.test(override)) return override;
+  if (override && isLocalHost() && /^https?:\/\//i.test(override)) return override;
   return DATA_URL;
 }
 
