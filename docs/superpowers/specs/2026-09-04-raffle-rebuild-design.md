@@ -219,6 +219,7 @@ are only placed in `src` and `href` attributes and must start with `http://` or
 
 - Custom admin UI or login.
 - Photo upload workflow. The Photo column accepts links only.
-- Winner names. Only ticket numbers are published.
+- Collecting winner names. The page publishes whatever the Winning Ticket cell holds, so
+  a name typed there will appear; volunteers are told to type only the ticket number.
 - Migrating the Sheet and script to the club account.
 - Changes to the root redirect page.
