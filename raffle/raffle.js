@@ -1,9 +1,11 @@
 import { DATA_URL, REFRESH_SECONDS } from './config.js';
 import { parseTickets, ticketMatches } from './tickets.js';
 import { normalizeRows, normalizeSettings, photoUrls, summarize } from './data.js';
+import { resolveDataUrl } from './source.js';
 
 const STORAGE_KEY = 'scwny.raffle.myTickets';
 const MAX_BACKOFF_SECONDS = 120;
+const FETCH_TIMEOUT_MS = 15000;
 
 const el = {
   title: document.getElementById('title'),
@@ -29,23 +31,16 @@ const state = {
   search: '',
   timer: null,
   backoffSeconds: REFRESH_SECONDS,
+  inFlight: false,
 };
 
 // ---------- data source ----------
 
-function isLocalHost() {
-  return ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
-}
-
-function resolveDataUrl() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('demo') === '1') return './sample-data.json';
-  const override = params.get('data');
-  if (override && isLocalHost() && /^https?:\/\//i.test(override)) return override;
-  return DATA_URL;
-}
-
-const dataUrl = resolveDataUrl();
+const dataUrl = resolveDataUrl({
+  search: window.location.search,
+  hostname: window.location.hostname,
+  defaultUrl: DATA_URL,
+});
 
 // ---------- storage ----------
 
@@ -84,21 +79,27 @@ function scheduleNext(seconds) {
 }
 
 async function fetchData() {
+  if (state.inFlight) return;
   window.clearTimeout(state.timer);
 
   if (!dataUrl) {
-    showError('No data source is configured yet. Add the Apps Script URL to raffle/config.js.');
+    showError("Results aren't posted yet. Check back when the drawing starts.");
+    console.warn('No data source configured. Set DATA_URL in raffle/config.js.');
     el.status.textContent = '';
     el.results.setAttribute('aria-busy', 'false');
     return;
   }
 
+  state.inFlight = true;
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
   try {
-    const response = await fetch(dataUrl, { cache: 'no-store' });
+    const response = await fetch(dataUrl, { cache: 'no-store', signal: controller.signal });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const payload = await response.json();
     if (!payload || payload.ok !== true) {
-      throw new Error(payload && payload.error ? payload.error : 'Unexpected response');
+      throw new Error(payload && payload.error ? `Server said: ${payload.error}` : 'Unexpected response');
     }
 
     state.rows = normalizeRows(payload.rows);
@@ -113,13 +114,17 @@ async function fetchData() {
   } catch (err) {
     const wait = state.backoffSeconds;
     state.backoffSeconds = Math.min(wait * 2, MAX_BACKOFF_SECONDS);
-    showError(`Couldn't load results. Retrying in ${wait} seconds…`);
+    const reason = err && err.message && err.message.startsWith('Server said: ') ? ` ${err.message}.` : '';
+    showError(`Couldn't load results.${reason} Retrying in ${wait} seconds…`);
     if (!state.loadedOnce) {
       el.status.textContent = '';
       el.results.setAttribute('aria-busy', 'false');
     }
     console.error('Raffle results fetch failed:', err);
     scheduleNext(wait);
+  } finally {
+    window.clearTimeout(timeout);
+    state.inFlight = false;
   }
 }
 

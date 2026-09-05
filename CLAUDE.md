@@ -16,8 +16,8 @@ CSS, and ES modules with no build step and no runtime dependencies. Deploy by pu
 ## Structure
 
 - `index.html` is only a meta-refresh redirect to the club's main site.
-- `raffle/` is the only real page. `raffle.js` owns the DOM, fetch, and polling. `tickets.js` and `data.js` are
-  pure modules with no DOM access; keep logic that can be unit tested in those.
+- `raffle/` is the only real page. `raffle.js` owns the DOM, fetch, and polling. `tickets.js`, `data.js`, and
+  `source.js` are pure modules with no DOM access; keep logic that can be unit tested in those.
 - The data source is a Google Apps Script web app that dumps a Google Sheet as JSON. The script returns every
   column keyed by header text, so the page, not the script, decides which columns matter. Header matching in
   `data.js` is case-insensitive.

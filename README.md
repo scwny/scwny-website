@@ -28,7 +28,7 @@ into `raffle/config.js`.
 
 Tab **Baskets**, header row: `Basket`, `Description`, `Winning Ticket`, `Details`,
 `Donated By`, `Photo`. Only the first three are required. `Photo` accepts a Google
-Drive share link or any image URL.
+Drive share link or any image URL. Drive files must be shared as Anyone with the link.
 
 Tab **Settings**, two columns: `Title` is the page heading, `Message` is an optional
 banner.
@@ -43,11 +43,14 @@ banner.
 | `raffle/raffle.js` | Fetching, live refresh, rendering, saved tickets. |
 | `raffle/tickets.js` | Parses ticket input like `97-104, 241` and matches winners. |
 | `raffle/data.js` | Maps Sheet headers to fields, sorts rows, rewrites photo links. |
+| `raffle/source.js` | Decides the data URL: config, `?demo=1`, or a localhost-only `?data=` override. |
 | `raffle/config.js` | The Apps Script URL and refresh interval. |
 | `raffle/raffle.css` | Styles. Cards on phones, a table on wide screens. |
 | `raffle/sample-data.json` | Demo data. Open the page with `?demo=1` to use it. |
 | `raffle/apps-script/` | Apps Script source and the setup checklist. |
 | `raffle/legacy.html` | The previous jQuery/DataTables page, kept for reference. |
+| `raffle/RaffleResults.css` | Stylesheet used only by `legacy.html`. |
+| `raffle/SCWNYLOGO.png` | Club logo used by both pages. |
 | `tests/` | Unit tests for the pure modules. |
 
 ## Developing

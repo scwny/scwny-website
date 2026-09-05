@@ -20,11 +20,14 @@ function doGet() {
   var cache = CacheService.getScriptCache();
   var body = cache.get(CACHE_KEY);
   if (!body) {
-    body = JSON.stringify(buildPayload());
-    try {
-      cache.put(CACHE_KEY, body, CACHE_SECONDS);
-    } catch (err) {
-      // Cache values are limited to 100 KB. Serving uncached is fine.
+    var payload = buildPayload();
+    body = JSON.stringify(payload);
+    if (payload.ok) {
+      try {
+        cache.put(CACHE_KEY, body, CACHE_SECONDS);
+      } catch (err) {
+        // Cache values are limited to 100 KB. Serving uncached is fine.
+      }
     }
   }
   return ContentService.createTextOutput(body).setMimeType(ContentService.MimeType.JSON);

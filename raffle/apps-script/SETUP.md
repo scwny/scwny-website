@@ -13,6 +13,10 @@ Takes about ten minutes. You need a Google account that will own the Sheet.
    | Basket | Description | Winning Ticket | Details | Donated By | Photo |
 
    Only the first three matter. Leave the others blank until you want them.
+
+   If you use the **Photo** column, paste a Google Drive share link and set that file's
+   sharing to **Anyone with the link → Viewer**. Private files show up as broken images
+   on the page.
 4. Add a second tab named **Settings**. Fill it like this:
 
    | A | B |
@@ -52,6 +56,9 @@ parameter on purpose, so a shared link cannot swap in someone else's data.
 
 - Give volunteers **edit** access to the Sheet. They do not need access to the script.
 - Type each winning ticket number into the **Winning Ticket** column as it is drawn.
+- Whatever is typed into **Winning Ticket** appears on the public page exactly as typed,
+  including a name if you add one. Type only the ticket number unless you mean to
+  publish more.
 - The page re-checks every 30 seconds. A change shows up on phones within about 35 seconds.
 
 ## If you ever change the script
