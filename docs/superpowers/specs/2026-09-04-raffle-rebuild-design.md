@@ -179,8 +179,8 @@ parsed as an integer, is in `numbers`. This tolerates cells like "104" and
 ### Header matching
 
 The page maps JSON keys to fields case-insensitively with whitespace collapsed.
-"Winner" is accepted as an alias for "Winning Ticket" so an older sheet layout still
-works.
+"Winner" is accepted as an alias for "Winning Ticket" and "Basket #" for "Basket", so
+the 2024 sheet layout still works.
 
 ### Photo links
 

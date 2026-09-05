@@ -26,6 +26,12 @@ test('normalizeRow maps headers case-insensitively, trims, and accepts the Winne
   });
 });
 
+test('normalizeRow accepts the 2024 sheet layout: Basket # and Winner', () => {
+  const row = normalizeRow({ 'Basket #': '7', Description: 'Italian Night', Winner: '104' });
+  assert.equal(row.basket, '7');
+  assert.equal(row.ticket, '104');
+});
+
 test('normalizeRow prefers Winning Ticket over Winner when both exist', () => {
   const row = normalizeRow({ 'Winning Ticket': '9', Winner: '4' });
   assert.equal(row.ticket, '9');

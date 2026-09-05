@@ -4,6 +4,7 @@
 // Sheet header (lower-cased, whitespace collapsed) -> Row field.
 const HEADER_TO_FIELD = {
   'basket': 'basket',
+  'basket #': 'basket', // 2024 sheet layout
   'description': 'description',
   'winning ticket': 'ticket',
   'winner': 'ticket', // older sheet layout
