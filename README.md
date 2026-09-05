@@ -1,49 +1,73 @@
 # scwny-website
 
 Static GitHub Pages site for the Skating Club of Western New York (SCWNY), served at
-[www.scwny.org](https://www.scwny.org). No build step, no dependencies, no tests.
+[www.scwny.org](https://www.scwny.org). No build step and no runtime dependencies.
 
 ## What it does
 
 - **`/`** redirects immediately to the club's main website,
-  [skatingclubofwesternnewyork.org](https://skatingclubofwesternnewyork.org/), via a meta refresh.
-- **`/raffle`** shows live Meat Raffle results in a table with three columns: basket number,
-  description, and winner.
-
-## Files
-
-| File | Purpose |
-| --- | --- |
-| `CNAME` | Binds the GitHub Pages site to `www.scwny.org`. |
-| `index.html` | Root redirect to the club's main website. |
-| `raffle/index.html` | The raffle results page. |
-| `raffle/RaffleResults.css` | Centers the logo and title on the raffle page. |
-| `raffle/SCWNYLOGO.png` | Club logo shown above the results table. |
+  [skatingclubofwesternnewyork.org](https://skatingclubofwesternnewyork.org/).
+- **`/raffle`** shows live basket raffle results. Visitors can save their ticket numbers
+  on their phone and the page highlights the baskets they won as results are entered.
 
 ## How the raffle page works
 
-The page loads jQuery and DataTables 2.1.8 from public CDNs. On load, DataTables fetches JSON from a
-Google Apps Script web app URL and renders the rows. The script reads from a Google Sheet, so
-editing the sheet updates the page. Paging is disabled so every result is visible on one screen.
+Volunteers type results into a Google Sheet during the drawing. A small Google Apps
+Script attached to that Sheet returns its contents as JSON. The page fetches that JSON
+every 30 seconds while open and renders it with plain JavaScript.
 
-The JSON response is expected to look like:
-
-```json
-{
-  "data": [
-    { "Raffle Item": "1", "Description": "...", "Winner": "..." }
-  ]
-}
+```
+Google Sheet  ->  Apps Script web app (JSON)  ->  raffle/index.html on GitHub Pages
 ```
 
-The column keys (`Raffle Item`, `Description`, `Winner`) must match the sheet's header row.
+Setting up the Sheet and script from scratch takes about ten minutes. Follow
+[`raffle/apps-script/SETUP.md`](raffle/apps-script/SETUP.md), then paste the web app URL
+into `raffle/config.js`.
+
+### Sheet layout
+
+Tab **Baskets**, header row: `Basket`, `Description`, `Winning Ticket`, `Details`,
+`Donated By`, `Photo`. Only the first three are required. `Photo` accepts a Google
+Drive share link or any image URL.
+
+Tab **Settings**, two columns: `Title` is the page heading, `Message` is an optional
+banner.
+
+## Files
+
+| Path | Purpose |
+| --- | --- |
+| `index.html` | Root redirect to the club's main website. |
+| `CNAME` | Binds GitHub Pages to `www.scwny.org`. |
+| `raffle/index.html` | The results page. |
+| `raffle/raffle.js` | Fetching, live refresh, rendering, saved tickets. |
+| `raffle/tickets.js` | Parses ticket input like `97-104, 241` and matches winners. |
+| `raffle/data.js` | Maps Sheet headers to fields, sorts rows, rewrites photo links. |
+| `raffle/config.js` | The Apps Script URL and refresh interval. |
+| `raffle/raffle.css` | Styles. Cards on phones, a table on wide screens. |
+| `raffle/sample-data.json` | Demo data. Open the page with `?demo=1` to use it. |
+| `raffle/apps-script/` | Apps Script source and the setup checklist. |
+| `raffle/legacy.html` | The previous jQuery/DataTables page, kept for reference. |
+| `tests/` | Unit tests for the pure modules. |
+
+## Developing
+
+Serve the repo root and open the demo:
+
+```
+python -m http.server 8765
+# then visit http://localhost:8765/raffle/?demo=1
+```
+
+Test a new Apps Script deployment without committing by opening the local server with
+`?data=<web app url>`. The override is ignored on the live site.
+
+Run the unit tests (Node 22 or newer):
+
+```
+npm test
+```
 
 ## Deploying
 
 Push to `main`. GitHub Pages serves the repo root directly.
-
-## Notes
-
-- The Google Apps Script deployment URL is hardcoded in `raffle/index.html`. If the script is
-  redeployed, update the URL there.
-- Moment.js is loaded on the raffle page but nothing uses it.
