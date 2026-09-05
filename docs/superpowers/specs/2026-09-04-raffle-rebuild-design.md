@@ -173,6 +173,8 @@ parsed as an integer, is in `numbers`. This tolerates cells like "104" and
 
 - `?demo=1` loads `./sample-data.json` instead of `DATA_URL`.
 - `?data=<url>` overrides `DATA_URL` for testing a new deployment before committing.
+  Honored only when the page is served from `localhost` or `127.0.0.1`. Ignored in
+  production, so a shared link cannot render arbitrary content on the club's domain.
 
 ### Header matching
 
@@ -203,14 +205,14 @@ are only placed in `src` and `href` attributes and must start with `http://` or
   photo.
 - Manual: open with `?data=https://example.invalid/` and confirm the inline error
   banner and retry behaviour.
-- Manual: once the real script is deployed, open with `?data=<script url>` and
-  confirm live data before committing the URL to `config.js`.
+- Manual: once the real script is deployed, open the local server with
+  `?data=<script url>` and confirm live data before committing the URL to `config.js`.
 
 ## Rollout
 
 1. Land the rebuilt page with `DATA_URL` empty and demo mode working.
 2. Patrick creates the Sheet, pastes headers, deploys the script, and shares the URL.
-3. Verify with `?data=`, commit the URL to `config.js`, push to `main`.
+3. Verify locally with `?data=`, commit the URL to `config.js`, push to `main`.
 4. Update README and CLAUDE.md to describe the new files and setup.
 
 ## Out of scope

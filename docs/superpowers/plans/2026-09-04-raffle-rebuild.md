@@ -1531,7 +1531,8 @@ python -m http.server 8000
 # then visit http://localhost:8000/raffle/?demo=1
 ```
 
-Test a new Apps Script deployment without committing: `?data=<web app url>`.
+Test a new Apps Script deployment without committing by opening the local server with
+`?data=<web app url>`. The override is ignored on the live site.
 
 Run the unit tests (Node 22 or newer):
 
@@ -1572,8 +1573,8 @@ CSS, and ES modules with no build step and no runtime dependencies. Deploy by pu
 - The data source is a Google Apps Script web app that dumps a Google Sheet as JSON. The script returns every
   column keyed by header text, so the page, not the script, decides which columns matter. Header matching in
   `data.js` is case-insensitive.
-- `raffle/config.js` holds the Apps Script URL. `?data=<url>` overrides it for testing; `?demo=1` loads
-  `sample-data.json`.
+- `raffle/config.js` holds the Apps Script URL. `?data=<url>` overrides it only when served from localhost;
+  `?demo=1` loads `sample-data.json`.
 - `raffle/legacy.html` is the old jQuery/DataTables page. Leave it alone unless asked.
 
 ## Gotchas
