@@ -992,7 +992,7 @@ export const REFRESH_SECONDS = 30;
 Run: `node -e "JSON.parse(require('fs').readFileSync('raffle/sample-data.json','utf8')); console.log('valid json')"`
 Expected: `valid json`.
 
-Start a local server in the background: `python -m http.server 8000` (from the repo root), then open `http://localhost:8000/raffle/?demo=1` in a browser. Expected: logo, "Raffle Results" heading, "Loading results…" status, the two inputs, and an empty results box. The browser console shows a 404 for `raffle.js`, which Task 6 fixes. Stop the server afterwards or leave it for Task 6.
+Start a local server in the background: `python -m http.server 8765` (from the repo root), then open `http://localhost:8765/raffle/?demo=1` in a browser. Expected: logo, "Raffle Results" heading, "Loading results…" status, the two inputs, and an empty results box. The browser console shows a 404 for `raffle.js`, which Task 6 fixes. Stop the server afterwards or leave it for Task 6.
 
 - [ ] **Step 5: Commit**
 
@@ -1375,7 +1375,7 @@ Expected: no syntax error; 23 tests pass.
 
 - [ ] **Step 3: Load the demo in a browser**
 
-With `python -m http.server 8000` running from the repo root, open `http://localhost:8000/raffle/?demo=1`.
+With `python -m http.server 8765` running from the repo root, open `http://localhost:8765/raffle/?demo=1`.
 
 Expected:
 - Heading reads "2026 Meat Raffle (demo)" and the banner shows the sample message.
@@ -1399,8 +1399,8 @@ Type `97-104, 17, 250` into the ticket box. Expected:
 - [ ] **Step 5: Verify search and error handling**
 
 - Type `wine` in search. Only Basket 6 remains. Type `zzz`. "No baskets match your search." Clear it.
-- Open `http://localhost:8000/raffle/?data=https://example.invalid/`. Expected: after a moment, a red inline banner "Couldn't load results. Retrying in 30 seconds…", no browser alert, status line empty, results box empty. Wait 30 seconds: the banner updates to "Retrying in 60 seconds…".
-- Open `http://localhost:8000/raffle/` with no parameters. Expected: banner "No data source is configured yet. Add the Apps Script URL to raffle/config.js."
+- Open `http://localhost:8765/raffle/?data=https://example.invalid/`. Expected: after a moment, a red inline banner "Couldn't load results. Retrying in 30 seconds…", no browser alert, status line empty, results box empty. Wait 30 seconds: the banner updates to "Retrying in 60 seconds…".
+- Open `http://localhost:8765/raffle/` with no parameters. Expected: banner "No data source is configured yet. Add the Apps Script URL to raffle/config.js."
 
 - [ ] **Step 6: Commit**
 
@@ -1429,7 +1429,7 @@ This task exists because the CSS breakpoint behavior cannot be unit tested. Use 
 
 - [ ] **Step 1: Phone layout**
 
-Open `http://localhost:8000/raffle/?demo=1` at a 390×844 viewport. Enter `97-104, 17` in the ticket box. Take a screenshot.
+Open `http://localhost:8765/raffle/?demo=1` at a 390×844 viewport. Enter `97-104, 17` in the ticket box. Take a screenshot.
 
 Expected: no horizontal scrolling; each basket is a card with the basket number on the left, description in the middle, and ticket on the right; the thumbnail sits under the description; the wins panel is readable; the table header row is not visible.
 
@@ -1527,8 +1527,8 @@ banner.
 Serve the repo root and open the demo:
 
 ```
-python -m http.server 8000
-# then visit http://localhost:8000/raffle/?demo=1
+python -m http.server 8765
+# then visit http://localhost:8765/raffle/?demo=1
 ```
 
 Test a new Apps Script deployment without committing by opening the local server with
@@ -1562,7 +1562,7 @@ CSS, and ES modules with no build step and no runtime dependencies. Deploy by pu
 ## Commands
 
 - `npm test` runs the unit tests with Node's built-in runner. Tests live in `tests/*.test.mjs`.
-- `python -m http.server 8000` from the repo root serves the site; open `http://localhost:8000/raffle/?demo=1`
+- `python -m http.server 8765` from the repo root serves the site; open `http://localhost:8765/raffle/?demo=1`
   for the results page with sample data. ES modules will not load from `file://`.
 
 ## Structure
@@ -1623,7 +1623,7 @@ Expected: JSON starting with `{"ok":true,"updated":"...","settings":{...},"rows"
 
 - [ ] **Step 2: Verify the live page against it without committing**
 
-Open `http://localhost:8000/raffle/?data=<url>` and confirm the Sheet's Title and rows appear. Edit a cell in the Sheet, wait up to 35 seconds, and confirm the page updates without a reload.
+Open `http://localhost:8765/raffle/?data=<url>` and confirm the Sheet's Title and rows appear. Edit a cell in the Sheet, wait up to 35 seconds, and confirm the page updates without a reload.
 
 - [ ] **Step 3: Set `DATA_URL`**
 

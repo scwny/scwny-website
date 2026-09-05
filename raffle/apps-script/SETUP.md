@@ -45,7 +45,7 @@ Takes about ten minutes. You need a Google account that will own the Sheet.
 Either send the URL to whoever maintains the site, or edit `raffle/config.js` and paste
 it between the quotes of `DATA_URL`. The site maintainer can test the URL before
 publishing by serving the repo locally and opening
-`http://localhost:8000/raffle/?data=PASTE_URL_HERE`. The live site ignores the `?data=`
+`http://localhost:8765/raffle/?data=PASTE_URL_HERE`. The live site ignores the `?data=`
 parameter on purpose, so a shared link cannot swap in someone else's data.
 
 ## During the event
