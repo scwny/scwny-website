@@ -366,7 +366,7 @@ function renderRow(row, anyPhoto, keepOpen) {
       const link = document.createElement('a');
       link.href = urls.full;
       link.target = '_blank';
-      link.rel = 'noopener';
+      link.rel = 'noopener noreferrer';
       const img = document.createElement('img');
       img.src = urls.thumb;
       img.alt = `Photo of basket ${row.basket}`;

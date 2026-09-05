@@ -59,7 +59,9 @@ Description, Details, Donated By, Title, and Message understand a little formatt
 - `**bold**` and `*italic*`
 - A link: `[Premier Wine](https://premierwine.com)`, or just paste a full `https://` address
 - Press **Ctrl+Enter** inside a cell to start a new line. A blank line starts a new paragraph.
-- Lines starting with `- ` become a bulleted list (Details and Message)
+- Lines starting with `- ` or `* ` become a bulleted list (Details and Message)
+- Watch out for a lone `*` in text like `12*18 print`: anything between two asterisks turns italic.
+  Write `12 x 18` instead.
 
 Anything else, including HTML tags, is shown exactly as typed. Basket and Winning Ticket are never
 formatted because the page sorts and matches on them.

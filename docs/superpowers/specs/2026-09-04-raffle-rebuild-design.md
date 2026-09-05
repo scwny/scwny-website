@@ -107,10 +107,13 @@ Setup steps for a human live in `raffle/apps-script/SETUP.md`.
 | `raffle/raffle.css` | Styles. Mobile-first. |
 | `raffle/raffle.js` | Fetch, render, refresh, storage, URL handling. |
 | `raffle/tickets.js` | Pure functions: parse ticket input, match against a cell. Unit tested. |
+| `raffle/data.js` | Pure functions: header mapping, sorting, settings, photo links. Unit tested. |
+| `raffle/source.js` | Pure function: which URL to load. Unit tested. |
+| `raffle/markdown.js` | Pure functions: the Markdown subset parser. Unit tested. |
 | `raffle/config.js` | Exports `DATA_URL` and `REFRESH_SECONDS`. The only file to edit after a redeploy. |
 | `raffle/sample-data.json` | Demo data in the JSON contract shape. |
 | `raffle/legacy.html` | The previous page, renamed, unchanged. |
-| `tests/tickets.test.mjs` | Node built-in test runner tests for `tickets.js`. |
+| `tests/*.test.mjs` | Node built-in test runner tests for the pure modules. |
 
 ### Layout
 
@@ -122,7 +125,7 @@ Setup steps for a human live in `raffle/apps-script/SETUP.md`.
   basket number, description, and ticket. Header reads "You won N basket(s)!".
   If tickets are entered but nothing matches yet, a single line reads
   "No wins yet." under the input.
-- Search: text input filtering on basket, description, and winning ticket.
+- Search: text input filtering on basket, the plain text of description, and winning ticket.
 - Results list: sorted by Basket ascending, numeric when both values are integers,
   otherwise string compare. Below 720px wide, each basket is a card. At 720px and
   above, a table with columns Basket, Description, Winning Ticket, and a thumbnail

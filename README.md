@@ -33,8 +33,9 @@ Drive share link or any image URL. Drive files must be shared as Anyone with the
 Tab **Settings**, two columns: `Title` is the page heading, `Message` is an optional
 banner.
 
-Text cells accept a small Markdown subset: `**bold**`, `*italic*`, `[label](https://url)`,
-line breaks, and `- ` bullet lists. HTML is shown literally. See the setup checklist.
+Text cells accept a small Markdown subset: `**bold**`, `*italic*`, `[label](https://url)` or a
+bare `https://` address, line breaks, and `- ` or `* ` bullet lists. HTML is shown literally. See
+the setup checklist.
 
 ## Files
 

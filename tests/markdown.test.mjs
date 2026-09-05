@@ -102,3 +102,35 @@ test('empty or non-string input yields nothing', () => {
 test('plainText strips formatting and keeps link labels', () => {
   assert.equal(plainText('**Wine** and [cheese](https://c.d)\n- one\n- two'), 'Wine and cheese one two');
 });
+
+test('only http and https bracket links are links, whatever the case or shape', () => {
+  for (const url of ['JAVASCRIPT:alert(1)', 'data:text/html;base64,AAAA', '//evil.example.com', '/relative/path', 'vbscript:msgbox']) {
+    assert.deepEqual(parseInline(`[x](${url})`), [text(`[x](${url})`)], url);
+  }
+  assert.deepEqual(parseInline('[x](HTTPS://EXAMPLE.COM)'), [link('HTTPS://EXAMPLE.COM', text('x'))]);
+});
+
+test('an empty label or a space before the URL is not a bracket link', () => {
+  assert.deepEqual(parseInline('[](https://x.y)'), [text('[]('), link('https://x.y', text('https://x.y')), text(')')]);
+  assert.deepEqual(parseInline('[x]( https://x.y)'), [text('[x]( '), link('https://x.y', text('https://x.y')), text(')')]);
+});
+
+test('links inside a link label are shown as text, never nested links', () => {
+  assert.deepEqual(parseInline('[see https://evil.example.com now](https://good.example.com)'), [
+    link('https://good.example.com', text('see https://evil.example.com now')),
+  ]);
+});
+
+test('italic or bold at the start of a line is not a bullet', () => {
+  assert.deepEqual(parseBlocks('*fresh* bread'), [paragraph(em(text('fresh')), text(' bread'))]);
+  assert.deepEqual(parseBlocks('**Deluxe** basket'), [paragraph(strong(text('Deluxe')), text(' basket'))]);
+});
+
+test('a cell full of unclosed brackets parses quickly', () => {
+  const hostile = '['.repeat(50000);
+  const started = performance.now();
+  const nodes = parseInline(hostile);
+  const elapsed = performance.now() - started;
+  assert.deepEqual(nodes, [text(hostile)]);
+  assert.ok(elapsed < 500, `took ${elapsed.toFixed(0)}ms`);
+});

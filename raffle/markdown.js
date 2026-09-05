@@ -8,7 +8,9 @@
 
 // Alternatives are tried in this order at each position:
 //   1,2  [label](url)      3  bare url      4  **strong**      5  *em*
-const TOKEN_RE = /\[([^\]\n]+)\]\(([^)\s]+)\)|(https?:\/\/[^\s<>()[\]]+)|\*\*(\S(?:[^\n]*?\S)?)\*\*|\*(\S(?:[^*\n]*?\S)?)\*/g;
+// The label and URL lengths are bounded so a cell full of "[" cannot make the
+// regex backtrack for seconds.
+const TOKEN_RE = /\[([^\]\n]{1,300})\]\(([^)\s]{1,2000})\)|(https?:\/\/[^\s<>()[\]]+)|\*\*(\S(?:[^\n]*?\S)?)\*\*|\*(\S(?:[^*\n]*?\S)?)\*/g;
 
 const TRAILING_PUNCTUATION = /[.,;:!?]+$/;
 
@@ -23,36 +25,44 @@ function pushText(nodes, text) {
   else nodes.push({ type: 'text', text });
 }
 
-function parseLine(line, nodes) {
+// `allowLinks` is false while parsing a link's label, so links never nest.
+function parseLine(line, nodes, allowLinks) {
   let last = 0;
   for (const match of line.matchAll(TOKEN_RE)) {
     pushText(nodes, line.slice(last, match.index));
     last = match.index + match[0].length;
     const [whole, label, bracketUrl, bareUrl, strongText, emText] = match;
     if (label !== undefined) {
-      if (isHttpUrl(bracketUrl)) nodes.push({ type: 'link', href: bracketUrl, children: parseInline(label) });
-      else pushText(nodes, whole);
+      if (allowLinks && isHttpUrl(bracketUrl)) {
+        nodes.push({ type: 'link', href: bracketUrl, children: parseInline(label, false) });
+      } else {
+        pushText(nodes, whole);
+      }
     } else if (bareUrl !== undefined) {
+      if (!allowLinks) {
+        pushText(nodes, whole);
+        continue;
+      }
       const trail = TRAILING_PUNCTUATION.exec(bareUrl);
       const href = trail ? bareUrl.slice(0, -trail[0].length) : bareUrl;
       nodes.push({ type: 'link', href, children: [{ type: 'text', text: href }] });
       if (trail) pushText(nodes, trail[0]);
     } else if (strongText !== undefined) {
-      nodes.push({ type: 'strong', children: parseInline(strongText) });
+      nodes.push({ type: 'strong', children: parseInline(strongText, allowLinks) });
     } else if (emText !== undefined) {
-      nodes.push({ type: 'em', children: parseInline(emText) });
+      nodes.push({ type: 'em', children: parseInline(emText, allowLinks) });
     }
   }
   pushText(nodes, line.slice(last));
 }
 
 /** Inline formatting only. Newlines become { type: 'br' } nodes. */
-export function parseInline(text) {
+export function parseInline(text, allowLinks = true) {
   if (typeof text !== 'string' || text === '') return [];
   const nodes = [];
   text.replace(/\r\n?/g, '\n').split('\n').forEach((line, index) => {
     if (index > 0) nodes.push({ type: 'br' });
-    parseLine(line, nodes);
+    parseLine(line, nodes, allowLinks);
   });
   return nodes;
 }
