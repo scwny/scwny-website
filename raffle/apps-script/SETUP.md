@@ -16,7 +16,7 @@ Takes about ten minutes. You need a Google account that will own the Sheet.
 
    If you use the **Photo** column, paste a Google Drive share link and set that file's
    sharing to **Anyone with the link → Viewer**. Private files show up as broken images
-   on the page.
+   on the page. Or skip the pasting: see **Basket photos from a phone** below.
 4. Add a second tab named **Settings**. Fill it like this:
 
    | A | B |
@@ -65,6 +65,55 @@ Description, Details, Donated By, Title, and Message understand a little formatt
 
 Anything else, including HTML tags, is shown exactly as typed. Basket and Winning Ticket are never
 formatted because the page sorts and matches on them.
+
+## Basket photos from a phone
+
+Instead of uploading to Drive, changing sharing, and pasting links into cells, submit
+photos through a Google Form. The script shares the file and writes the link into the
+matching Baskets row. Submitting the same basket number again replaces the photo, so if
+baskets get renumbered, just reshoot.
+
+### One-time setup (about ten minutes)
+
+1. Go to [forms.google.com](https://forms.google.com), signed in as the account that owns
+   the Sheet, and create a blank form. Title it **Basket photo**.
+2. First question: title it **Basket number**. Type **Short answer**, and turn on
+   **Required**. Optional: in the ⋮ menu choose **Response validation** > Number >
+   Whole number, so typos are caught on the phone.
+3. Second question: title it **Photo**. Type **File upload**. Accept the prompt about
+   uploading to Drive. Set **Allow only specific file types** > Image, **Maximum number of
+   files** 1, **Maximum file size** 10 MB. Turn on **Required**.
+4. **Settings** tab (top of the Form) > Responses: set **Collect email addresses** to
+   **Verified**. Leave "Limit to 1 response" off.
+5. **Responses** tab > **Link to Sheets** > **Select existing spreadsheet** > pick the
+   raffle Sheet. A new tab named "Form Responses 1" appears in it. Leave that tab alone;
+   the feed ignores it.
+6. In the raffle Sheet, **Settings** tab, add a row: A = `Photo uploaders`, B = the Google
+   email addresses allowed to submit, separated by commas. Anyone else who finds the Form
+   link can submit, but their photos are ignored and never shared.
+7. **Extensions > Apps Script** in the Sheet. Make sure the editor has the current
+   `Code.gs` (it must contain `onPhotoSubmit`). Save.
+8. Left sidebar, **Triggers** (alarm-clock icon) > **Add Trigger**. Function
+   `onPhotoSubmit`, event source **From spreadsheet**, event type **On form submit**.
+   Save, and allow the permissions when asked (same "unsafe" warning as before).
+9. Back in the Form, click **Send**, choose the link icon, copy the link. Open it on your
+   phone and add it to the home screen. Share the link with the other uploader.
+
+### Taking photos
+
+1. Open the Form on your phone. Type the basket number.
+2. Tap **Add file**, then **Camera** (or pick from the gallery). Submit.
+3. Within about 30 seconds the photo appears on the results page. To replace it, submit
+   the same basket number again.
+
+If a basket number does not exist in the Baskets tab yet, the script adds a row with just
+the number and photo; fill in the description later. If a photo does not show up, open the
+Apps Script editor, **Executions** in the left sidebar, and look at the latest
+`onPhotoSubmit` run; a submitter missing from "Photo uploaders" is logged there.
+
+Replaced photos stay in your Drive under **Basket photo (File responses)**. Delete that
+folder after the event if you like; the page only needs the links that are still in the
+Sheet.
 
 ## During the event
 

@@ -29,6 +29,8 @@ into `raffle/config.js`.
 Tab **Baskets**, header row: `Basket`, `Description`, `Winning Ticket`, `Details`,
 `Donated By`, `Photo`. Only the first three are required. `Photo` accepts a Google
 Drive share link or any image URL. Drive files must be shared as Anyone with the link.
+The easiest way to fill it is the photo Form described in the setup checklist: pick the
+basket number, take the picture on your phone, and the script writes the link for you.
 
 Tab **Settings**, two columns: `Title` is the page heading, `Message` is an optional
 banner.
