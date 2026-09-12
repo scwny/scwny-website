@@ -125,8 +125,8 @@ there still works, and you can still use the photo Form.
 ### One-time setup (about five minutes)
 
 1. In the raffle Sheet, **Settings** tab, add a row: A = `Editor password`, B = a password
-   of your choosing. This row never appears on the public page. Leaving it blank turns the
-   editor off.
+   of your choosing (a few words you can say out loud, such as `blue skates cold rink`).
+   This row never appears on the public page. Leaving it blank turns the editor off.
 2. **Extensions > Apps Script**. Make sure the editor has the current `Code.gs` (it must
    contain `doPost`). Save.
 3. **Deploy > Manage deployments**, click the pencil, set Version to **New version**, and
@@ -140,7 +140,8 @@ there still works, and you can still use the photo Form.
 - Tap a basket to edit it, or **Add basket** for a new one. **Save** writes the text.
 - **Take or choose photo** uploads right away. There is no need to press Save for a photo.
   On a phone it opens the camera. Photos are shrunk before upload, so they take a few
-  seconds on venue Wi-Fi.
+  seconds on venue Wi-Fi. For a brand-new basket, press Save once first so the row exists,
+  then add the photo.
 - The preview under Details shows exactly what the results page will show.
 - Only the fields you changed are written, so two people can work on different parts of
   the same basket. If two people change the same field, the later save wins.

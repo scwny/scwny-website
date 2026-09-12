@@ -10,9 +10,14 @@ import vm from 'node:vm';
 const source = readFileSync(new URL('../raffle/apps-script/Code.gs', import.meta.url), 'utf8');
 const gs = vm.runInNewContext(
   `${source}; ({ isAllowedUploader, driveFileId, photoSubmission, findBasketRow, findColumn, publicSettings,
-     rowObject, checkPassword, parseEditRequest, upsertBasket, driveViewUrl })`,
+     rowObject, checkPassword, parseEditRequest, upsertBasket, driveViewUrl, settingValue })`,
   {},
 );
+
+/** Sort {row, col, value} entries so a changes array can be deep-equal-compared order-independently. */
+function sortChanges(list) {
+  return [...list].sort((a, b) => a.row - b.row || a.col - b.col);
+}
 
 test('isAllowedUploader matches case-insensitively and ignores spacing', () => {
   const list = ' Pat@Gmail.com , other@example.org ';
@@ -172,6 +177,47 @@ test('upsertBasket throws when the sheet has no Basket header', () => {
   assert.throws(() => gs.upsertBasket([['Name', 'Description']], '1', { Description: 'x' }), /No "Basket" header/);
 });
 
+test('upsertBasket reports cell-level changes for an existing row, with no basket cell', () => {
+  const values = [
+    ['Basket', 'Description', 'Winning Ticket', 'Details'],
+    ['1', 'Italian Night', '104', 'Pasta'],
+    ['2', 'Movie Night', '', ''],
+  ];
+  const result = gs.upsertBasket(values, '2', { Description: 'Movie Night!', Details: 'Popcorn' });
+  const changes = [...result.changes].map((c) => ({ ...c }));
+  assert.deepEqual(sortChanges(changes), sortChanges([
+    { row: 2, col: 1, value: 'Movie Night!' },
+    { row: 2, col: 3, value: 'Popcorn' },
+  ]));
+});
+
+test('upsertBasket reports the basket cell and field cell when the basket is new', () => {
+  const values = [['Basket #', 'Description'], ['1', 'Italian Night']];
+  const result = gs.upsertBasket(values, '12', { Description: 'Spa Day' });
+  const changes = [...result.changes].map((c) => ({ ...c }));
+  assert.deepEqual(sortChanges(changes), sortChanges([
+    { row: 2, col: 0, value: '12' },
+    { row: 2, col: 1, value: 'Spa Day' },
+  ]));
+});
+
+test('upsertBasket reports the header cell and data cell for a new column', () => {
+  const values = [['Basket #', 'Description'], ['1', 'Italian Night']];
+  const result = gs.upsertBasket(values, '1', { 'Donated By': 'Jane' });
+  const changes = [...result.changes].map((c) => ({ ...c }));
+  assert.deepEqual(sortChanges(changes), sortChanges([
+    { row: 0, col: 2, value: 'Donated By' },
+    { row: 1, col: 2, value: 'Jane' },
+  ]));
+});
+
 test('driveViewUrl builds the link the results page already understands', () => {
   assert.equal(gs.driveViewUrl('1AbC_d-9xyz'), 'https://drive.google.com/file/d/1AbC_d-9xyz/view');
+});
+
+test('settingValue matches a key regardless of case and surrounding spacing, or returns empty', () => {
+  const settings = { ' editor PASSWORD ': 'hunter2', 'Photo Uploaders': 'pat@gmail.com' };
+  assert.equal(gs.settingValue(settings, 'Editor password'), 'hunter2');
+  assert.equal(gs.settingValue(settings, 'photo uploaders'), 'pat@gmail.com');
+  assert.equal(gs.settingValue(settings, 'Missing'), '');
 });

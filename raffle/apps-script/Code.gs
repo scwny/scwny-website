@@ -97,6 +97,16 @@ function publicSettings(settings) {
   return out;
 }
 
+/** The value of the settings row whose key matches `key` case- and space-insensitively, or ''. */
+function settingValue(settings, key) {
+  var wanted = String(key == null ? '' : key).trim().toLowerCase();
+  var found = '';
+  Object.keys(settings || {}).forEach(function (candidate) {
+    if (String(candidate).trim().toLowerCase() === wanted) found = settings[candidate];
+  });
+  return found;
+}
+
 /** Run this from the editor (select "debugPayload", press Run) to see the JSON in the log. */
 function debugPayload() {
   Logger.log(JSON.stringify(buildPayload(), null, 2));
@@ -113,7 +123,7 @@ function debugPayload() {
 function onPhotoSubmit(e) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var submission = photoSubmission(e && e.namedValues);
-  var allowed = readSettings(ss.getSheetByName(SETTINGS_SHEET))[UPLOADERS_SETTING];
+  var allowed = settingValue(readSettings(ss.getSheetByName(SETTINGS_SHEET)), UPLOADERS_SETTING);
   if (!isAllowedUploader(submission.email, allowed)) {
     Logger.log('Ignored photo from "' + submission.email + '": not in ' + UPLOADERS_SETTING);
     return;
@@ -252,8 +262,10 @@ function parseEditRequest(body) {
 /**
  * Pure: copy the values grid, write `fields` (keyed by header) into the basket's
  * row, appending a row for a new basket and a header for a new column. The
- * returned headers and row are padded to the same width so the caller can write
- * them back with two setValues calls.
+ * returned headers and row are padded to the same width. `changes` lists every
+ * cell that actually needs writing back, as 0-based grid coordinates
+ * ({ row, col, value }), so the caller can write only those cells instead of
+ * rewriting whole rows and clobbering cells nobody touched.
  */
 function upsertBasket(values, basket, fields) {
   var grid = (values || []).map(function (row) { return row.slice(); });
@@ -262,8 +274,10 @@ function upsertBasket(values, basket, fields) {
   var basketCol = findColumn(headers, 'basket');
   if (basketCol < 0) throw new Error('No "Basket" header in ' + BASKETS_SHEET);
 
+  var changes = [];
   var rowIndex = findBasketRow(grid, basketCol, basket);
-  if (rowIndex < 0) {
+  var isNew = rowIndex < 0;
+  if (isNew) {
     rowIndex = grid.length;
     grid.push([]);
   }
@@ -274,17 +288,22 @@ function upsertBasket(values, basket, fields) {
     if (col < 0) {
       headers.push(name);
       col = headers.length - 1;
+      changes.push({ row: 0, col: col, value: headers[col] });
     }
-    row[col] = String(fields[name] == null ? '' : fields[name]);
+    var value = String(fields[name] == null ? '' : fields[name]);
+    row[col] = value;
+    changes.push({ row: rowIndex, col: col, value: value });
   });
+
   row[basketCol] = String(basket).trim();
+  if (isNew) changes.push({ row: rowIndex, col: basketCol, value: row[basketCol] });
 
   var width = Math.max(headers.length, row.length);
   for (var i = 0; i < width; i++) {
     if (headers[i] == null) headers[i] = '';
     if (row[i] == null) row[i] = '';
   }
-  return { headers: headers, row: row, rowIndex: rowIndex };
+  return { headers: headers, row: row, rowIndex: rowIndex, changes: changes };
 }
 
 function driveViewUrl(id) {
@@ -300,7 +319,7 @@ function doPost(e) {
     if (typeof request === 'string') throw new Error(request);
 
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var stored = readSettings(ss.getSheetByName(SETTINGS_SHEET))[PASSWORD_SETTING];
+    var stored = settingValue(readSettings(ss.getSheetByName(SETTINGS_SHEET)), PASSWORD_SETTING);
     var denied = checkPassword(request.password, stored);
     if (denied) throw new Error(denied);
 
@@ -323,17 +342,33 @@ function doPost(e) {
   return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
 }
 
-/** Read the sheet, upsert the basket, write the header row and that row back. */
+/**
+ * Read the sheet, upsert the basket, then write back only the cells that
+ * changed. Writing single cells (instead of whole rows with setValues) keeps
+ * a volunteer's concurrent edit to some other cell from being clobbered by a
+ * stale display value, and leaves formulas and cell formatting elsewhere in
+ * the row untouched. setNumberFormat('@') forces plain text so a basket
+ * number like "007" or a ticket like "0104" keeps its leading zeros.
+ */
 function writeBasket(sheet, basket, fields) {
   var result = upsertBasket(sheet.getDataRange().getDisplayValues(), basket, fields);
-  var width = result.headers.length;
-  sheet.getRange(1, 1, 1, width).setValues([result.headers]);
-  sheet.getRange(result.rowIndex + 1, 1, 1, width).setValues([result.row]);
+  if (result.rowIndex + 1 > sheet.getMaxRows()) {
+    sheet.insertRowsAfter(sheet.getMaxRows(), result.rowIndex + 1 - sheet.getMaxRows());
+  }
+  if (result.headers.length > sheet.getMaxColumns()) {
+    sheet.insertColumnsAfter(sheet.getMaxColumns(), result.headers.length - sheet.getMaxColumns());
+  }
+  result.changes.forEach(function (change) {
+    sheet.getRange(change.row + 1, change.col + 1).setNumberFormat('@').setValue(change.value);
+  });
   return rowObject(result.headers, result.row);
 }
 
 /** Decode the uploaded image, save it in the photo folder, share it, return its link. */
 function storePhoto(request) {
+  // Base64 is ~4/3 the byte length (plus up to 4 bytes of padding/overhead), so this
+  // catches an oversized upload before spending time decoding it.
+  if (request.data.length > (MAX_PHOTO_BYTES * 4) / 3 + 4) throw new Error('Photo too large');
   var bytes = Utilities.base64Decode(request.data);
   if (bytes.length > MAX_PHOTO_BYTES) throw new Error('Photo too large');
   var blob = Utilities.newBlob(bytes, request.type, request.name);
@@ -342,7 +377,12 @@ function storePhoto(request) {
   return driveViewUrl(file.getId());
 }
 
+/** The "Raffle photos" folder, skipping any trashed copy; creates a fresh one if none remains. */
 function photoFolder() {
   var folders = DriveApp.getFoldersByName(PHOTO_FOLDER);
-  return folders.hasNext() ? folders.next() : DriveApp.createFolder(PHOTO_FOLDER);
+  while (folders.hasNext()) {
+    var folder = folders.next();
+    if (!folder.isTrashed()) return folder;
+  }
+  return DriveApp.createFolder(PHOTO_FOLDER);
 }

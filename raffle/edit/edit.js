@@ -72,7 +72,6 @@ const el = {
 
 const state = {
   rows: [],
-  loadedOnce: false,
   updated: null,
   search: '',
   afterLogin: 'list',
@@ -190,11 +189,13 @@ async function fetchData() {
     }
     state.rows = normalizeRows(payload.rows);
     state.updated = new Date();
-    state.loadedOnce = true;
     clearError();
     renderList();
   } catch (err) {
-    showError(`Couldn't load baskets. ${err && err.message ? err.message : ''}`.trim());
+    const message = err && err.name === 'AbortError'
+      ? 'The server took too long to answer. Try again.'
+      : `Couldn't load baskets. ${err && err.message ? err.message : ''}`.trim();
+    showError(message);
     el.status.textContent = '';
     console.error('Basket list fetch failed:', err);
   } finally {
@@ -210,19 +211,23 @@ function formatTime(date) {
   return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }
 
-function thumbnail(row, className) {
+function placeholder() {
+  const box = document.createElement('div');
+  box.className = 'no-photo';
+  box.setAttribute('aria-label', 'No photo');
+  return box;
+}
+
+function thumbnail(row) {
   const urls = photoUrls(row.photo);
-  if (!urls) {
-    const box = document.createElement('div');
-    box.className = 'no-photo';
-    box.setAttribute('aria-label', 'No photo');
-    return box;
-  }
+  if (!urls) return placeholder();
   const img = document.createElement('img');
   img.src = urls.thumb;
   img.alt = `Photo of basket ${row.basket}`;
   img.loading = 'lazy';
-  if (className) img.className = className;
+  // Drive thumbnails can 404 for a minute right after upload; fall back rather than
+  // show a broken-image icon.
+  img.onerror = () => img.replaceWith(placeholder());
   return img;
 }
 
@@ -363,6 +368,7 @@ function showSaveError(error) {
     change.type = 'button';
     change.textContent = 'Change password';
     change.addEventListener('click', () => {
+      storePassword('');
       state.afterLogin = 'editor';
       el.password.value = '';
       show('login');
