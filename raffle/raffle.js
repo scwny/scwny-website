@@ -3,6 +3,7 @@ import { parseTickets, ticketMatches } from './tickets.js';
 import { normalizeRows, normalizeSettings, photoUrls, summarize } from './data.js';
 import { resolveDataUrl } from './source.js';
 import { parseInline, parseBlocks, plainText } from './markdown.js';
+import { renderInline, renderBlocks, setInline, setBlocks } from './render.js';
 
 const STORAGE_KEY = 'scwny.raffle.myTickets';
 const MAX_BACKOFF_SECONDS = 120;
@@ -138,58 +139,6 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ---------- rendering ----------
-
-// Formatted text. markdown.js parses Sheet text into plain objects; these build
-// DOM nodes from them one at a time. Nothing here parses HTML.
-
-function renderInline(nodes, parent) {
-  for (const node of nodes) {
-    if (node.type === 'text') {
-      parent.appendChild(document.createTextNode(node.text));
-    } else if (node.type === 'br') {
-      parent.appendChild(document.createElement('br'));
-    } else if (node.type === 'strong' || node.type === 'em') {
-      const element = document.createElement(node.type);
-      renderInline(node.children, element);
-      parent.appendChild(element);
-    } else if (node.type === 'link') {
-      const link = document.createElement('a');
-      link.href = node.href;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      renderInline(node.children, link);
-      parent.appendChild(link);
-    }
-  }
-}
-
-function renderBlocks(blocks, parent) {
-  for (const block of blocks) {
-    if (block.type === 'paragraph') {
-      const p = document.createElement('p');
-      renderInline(block.children, p);
-      parent.appendChild(p);
-    } else if (block.type === 'list') {
-      const ul = document.createElement('ul');
-      for (const item of block.items) {
-        const li = document.createElement('li');
-        renderInline(item, li);
-        ul.appendChild(li);
-      }
-      parent.appendChild(ul);
-    }
-  }
-}
-
-function setInline(element, text) {
-  element.replaceChildren();
-  renderInline(parseInline(text), element);
-}
-
-function setBlocks(element, text) {
-  element.replaceChildren();
-  renderBlocks(parseBlocks(text), element);
-}
 
 function isWin(row) {
   return row.ticket !== '' && ticketMatches(row.ticket, state.myNumbers);
