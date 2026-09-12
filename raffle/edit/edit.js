@@ -13,10 +13,14 @@ import {
   readResponse,
   filterBaskets,
   mergeRow,
+  JPEG_QUALITY,
+  fitWithin,
+  buildPhotoPayload,
 } from './editor.js';
 
 const PASSWORD_KEY = 'scwny.raffle.editorPassword';
 const FETCH_TIMEOUT_MS = 15000;
+const PHOTO_TIMEOUT_MS = 60000;
 
 const demo = new URLSearchParams(window.location.search).get('demo') === '1';
 const dataUrl = resolveDataUrl({
@@ -301,7 +305,7 @@ function renderPhoto() {
   el.photoCurrent.replaceChildren(thumbnail({ basket, photo }));
   el.fPhoto.disabled = isNew;
   el.photoButton.classList.toggle('disabled', isNew);
-  el.photoStatus.textContent = isNew ? 'Save the basket first, then add a photo.' : '';
+  if (isNew) el.photoStatus.textContent = 'Save the basket first, then add a photo.';
   el.ePhoto.hidden = true;
 }
 
@@ -332,6 +336,7 @@ function openEditor(row) {
   note('');
   el.confirmBar.hidden = true;
   renderPreview();
+  el.photoStatus.textContent = '';
   renderPhoto();
   show('editor');
   (isNew ? el.fBasket : el.fDescription).focus();
@@ -410,8 +415,107 @@ async function save(event) {
   el.fBasket.readOnly = true;
   el.heading.textContent = `Edit basket ${result.row.basket}`;
   renderPreview();
+  el.photoStatus.textContent = '';
   renderPhoto();
   note(demo ? 'Demo mode: nothing was saved.' : 'Saved.');
+}
+
+// ---------- photos ----------
+
+async function loadBitmap(file) {
+  if ('createImageBitmap' in window) {
+    try {
+      return await window.createImageBitmap(file, { imageOrientation: 'from-image' });
+    } catch {
+      // Some browsers reject the options bag or the format. Fall through to <img>.
+    }
+  }
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('decode failed'));
+    };
+    img.src = url;
+  });
+}
+
+/** Re-encode the picture as a JPEG no larger than MAX_PHOTO_EDGE. Returns base64 without the data: prefix. */
+async function shrinkImage(file) {
+  const source = await loadBitmap(file);
+  const sourceWidth = source.naturalWidth || source.width;
+  const sourceHeight = source.naturalHeight || source.height;
+  const { width, height } = fitWithin(sourceWidth, sourceHeight);
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  canvas.getContext('2d').drawImage(source, 0, 0, width, height);
+  if (typeof source.close === 'function') source.close();
+  const dataUrl = canvas.toDataURL('image/jpeg', JPEG_QUALITY);
+  return dataUrl.slice(dataUrl.indexOf(',') + 1);
+}
+
+async function uploadPhoto() {
+  const file = el.fPhoto.files && el.fPhoto.files[0];
+  el.fPhoto.value = '';
+  if (!file || state.uploading || !state.editing || state.editing.isNew) return;
+
+  const basket = state.editing.basket;
+  state.uploading = true;
+  setFieldError(el.ePhoto, '');
+  el.photoStatus.textContent = 'Preparing photo…';
+
+  let data;
+  try {
+    data = await shrinkImage(file);
+  } catch {
+    state.uploading = false;
+    el.photoStatus.textContent = '';
+    setFieldError(el.ePhoto, 'That file is not a picture this browser can read.');
+    return;
+  }
+
+  el.photoStatus.textContent = 'Uploading photo…';
+  const result = await post(buildPhotoPayload({ password: currentPassword(), basket, data }), PHOTO_TIMEOUT_MS);
+  state.uploading = false;
+
+  // The editor may have moved on while the upload ran.
+  const stillHere = state.editing && state.editing.basket === basket;
+  if (!result.ok) {
+    if (stillHere) {
+      el.photoStatus.textContent = '';
+      setFieldError(el.ePhoto, result.error);
+    }
+    return;
+  }
+  applySavedRow(result.row);
+  if (stillHere) {
+    state.editing.photo = result.row.photo;
+    renderPhoto();
+    el.photoStatus.textContent = demo ? 'Demo mode: nothing was saved.' : 'Photo saved.';
+  }
+}
+
+// ---------- unsaved changes ----------
+
+function isDirty() {
+  if (!state.editing) return false;
+  const now = formValues();
+  return Object.keys(now).some((key) => now[key] !== state.editing.original[key]);
+}
+
+function requestClose() {
+  if (isDirty()) {
+    el.confirmBar.hidden = false;
+    el.discard.focus();
+    return;
+  }
+  closeEditor();
 }
 
 // ---------- events ----------
@@ -446,7 +550,18 @@ for (const input of [el.fDescription, el.fDetails, el.fDonated]) {
   input.addEventListener('input', renderPreview);
 }
 el.form.addEventListener('submit', save);
-el.back.addEventListener('click', closeEditor);
+el.back.addEventListener('click', requestClose);
+el.discard.addEventListener('click', closeEditor);
+el.keep.addEventListener('click', () => {
+  el.confirmBar.hidden = true;
+});
+el.fPhoto.addEventListener('change', uploadPhoto);
+
+window.addEventListener('beforeunload', (event) => {
+  if (!isDirty()) return;
+  event.preventDefault();
+  event.returnValue = '';
+});
 
 // ---------- start ----------
 
