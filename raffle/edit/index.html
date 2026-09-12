@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Basket Editor · SCWNY</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="../SCWNYLOGO.png">
+  <link rel="stylesheet" href="../raffle.css">
+  <link rel="stylesheet" href="./edit.css">
+</head>
+<body>
+  <header class="site-header">
+    <img class="logo" src="../SCWNYLOGO.png" alt="Skating Club of Western New York">
+    <h1>Basket Editor</h1>
+  </header>
+
+  <main>
+    <p id="error" class="error" role="alert" hidden></p>
+
+    <section id="login" class="panel" hidden>
+      <form id="login-form" novalidate>
+        <label for="password">Editor password</label>
+        <input id="password" type="password" autocomplete="current-password">
+        <p class="help">Ask whoever runs the raffle Sheet. It is the "Editor password" row on the Settings tab.</p>
+        <div class="actions">
+          <button type="submit" class="primary">Continue</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="list" hidden>
+      <div class="toolbar">
+        <label for="search" class="visually-hidden">Search baskets</label>
+        <input id="search" type="search" autocomplete="off" placeholder="Search baskets…">
+        <button id="refresh" type="button">Refresh</button>
+        <button id="add" type="button" class="primary">Add basket</button>
+      </div>
+      <p id="status" class="status" aria-live="polite">Loading baskets…</p>
+      <ul id="baskets" class="baskets"></ul>
+    </section>
+
+    <section id="editor" class="panel" hidden>
+      <form id="basket-form" novalidate>
+        <h2 id="editor-heading">Edit basket</h2>
+
+        <label for="f-basket">Basket</label>
+        <input id="f-basket" type="text" inputmode="numeric" autocomplete="off">
+        <p id="e-basket" class="field-error" hidden></p>
+
+        <label for="f-description">Description</label>
+        <input id="f-description" type="text" autocomplete="off">
+        <p id="p-description" class="preview-inline" aria-hidden="true"></p>
+        <p id="e-description" class="field-error" hidden></p>
+
+        <label for="f-ticket">Winning Ticket</label>
+        <input id="f-ticket" type="text" inputmode="numeric" autocomplete="off">
+
+        <label for="f-details">Details</label>
+        <textarea id="f-details" rows="8"></textarea>
+        <p class="help hint">**bold** &nbsp; *italic* &nbsp; [text](https://link) &nbsp; - bullet</p>
+        <div class="preview">
+          <div class="preview-label">Preview</div>
+          <div id="p-details" class="details-body"></div>
+        </div>
+
+        <label for="f-donated">Donated By</label>
+        <input id="f-donated" type="text" autocomplete="off">
+        <p id="p-donated" class="preview-inline donor" aria-hidden="true"></p>
+
+        <fieldset class="photo-block">
+          <legend>Photo</legend>
+          <div id="photo-current" class="photo-current"></div>
+          <label id="photo-button" class="button" for="f-photo">Take or choose photo</label>
+          <input id="f-photo" type="file" accept="image/*" capture="environment" class="visually-hidden">
+          <p id="photo-status" class="help"></p>
+          <p id="e-photo" class="field-error" hidden></p>
+        </fieldset>
+
+        <div id="confirm-bar" class="confirm" hidden>
+          <span>You have unsaved changes.</span>
+          <button type="button" id="discard">Discard</button>
+          <button type="button" id="keep" class="primary">Keep editing</button>
+        </div>
+
+        <p id="e-save" class="field-error" hidden></p>
+        <p id="note" class="help" aria-live="polite"></p>
+        <div class="actions">
+          <button type="button" id="back">Back to list</button>
+          <button type="submit" id="save" class="primary">Save</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    Skating Club of Western New York ·
+    <a href="../">Results page</a> ·
+    <a href="#" id="logout">Log out</a>
+  </footer>
+
+  <script type="module" src="./edit.js"></script>
+</body>
+</html>

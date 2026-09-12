@@ -1,0 +1,98 @@
+/* Editor-only styles. raffle.css provides variables, .panel, .error, .help, inputs. */
+
+main { max-width: 720px; }
+
+h2 { font-size: 1.25rem; margin: 0 0 12px; }
+
+textarea,
+input[type="password"] {
+  width: 100%;
+  font: inherit;
+  font-size: 1.05rem;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+textarea { resize: vertical; line-height: 1.4; min-height: 9em; }
+textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+label + input, label + textarea { margin-bottom: 4px; }
+#basket-form label { margin-top: 14px; }
+#basket-form label:first-of-type { margin-top: 0; }
+input[readonly] { background: #eef2f6; color: var(--muted); }
+
+button, .button {
+  font: inherit;
+  font-size: 1rem;
+  padding: 10px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--accent);
+  cursor: pointer;
+  display: inline-block;
+  line-height: 1.2;
+}
+button.primary, .button.primary { background: var(--accent); color: #fff; }
+button:disabled { opacity: 0.6; cursor: default; }
+.actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; flex-wrap: wrap; }
+
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.toolbar input[type="search"] { flex: 1 1 200px; }
+
+.baskets { list-style: none; margin: 0; padding: 0; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.baskets li + li { border-top: 1px solid var(--line); }
+.basket-row {
+  display: grid;
+  grid-template-columns: 56px auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  color: var(--text);
+  text-align: left;
+}
+.basket-row:hover, .basket-row:focus-visible { background: var(--accent-soft); outline: none; }
+.basket-row .num { font-size: 1.1rem; }
+.basket-row .desc { font-weight: 600; overflow-wrap: anywhere; }
+.basket-row .ticket { color: var(--muted); font-size: 0.9rem; white-space: nowrap; }
+.basket-row img, .no-photo { width: 56px; height: 42px; object-fit: cover; border-radius: 6px; display: block; }
+.no-photo { background: #eef2f6; border: 1px dashed var(--line); }
+.baskets .empty { padding: 24px; }
+
+.field-error { color: var(--error-text); margin: 4px 0 0; font-size: 0.9rem; }
+.hint { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.85rem; }
+
+.preview { margin-top: 8px; padding: 10px 12px; background: var(--accent-soft); border: 1px solid #bcd4ee; border-radius: 8px; }
+.preview-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 4px; }
+.preview .details-body > :first-child { margin-top: 0; }
+.preview .details-body > :last-child { margin-bottom: 0; }
+.preview .details-body p { margin: 6px 0 0; }
+.preview-inline { margin: 4px 0 0; min-height: 1.2em; color: var(--muted); }
+.preview-inline:empty { display: none; }
+
+.photo-block { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px 12px; margin-top: 16px; }
+.photo-block legend { font-weight: 600; padding: 0 4px; }
+.photo-current { margin-bottom: 10px; }
+.photo-current img { display: block; max-width: 240px; width: 100%; height: auto; border-radius: 8px; }
+.photo-current .no-photo { width: 120px; height: 90px; }
+
+.confirm {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  padding: 10px 12px;
+  background: var(--win-bg);
+  border: 1px solid var(--win-border);
+  border-radius: 8px;
+}
+.confirm span { flex: 1 1 auto; }
+.confirm[hidden] { display: none; }
+
+.site-footer a { color: var(--muted); }
