@@ -11,13 +11,18 @@ CSS, and ES modules with no build step and no runtime dependencies. Deploy by pu
 
 - `npm test` runs the unit tests with Node's built-in runner. Tests live in `tests/*.test.mjs`.
 - `python -m http.server 8765` from the repo root serves the site; open `http://localhost:8765/raffle/?demo=1`
-  for the results page with sample data. ES modules will not load from `file://`.
+  for the results page with sample data, or `http://localhost:8765/raffle/edit/?demo=1` for the editor with stubbed saves.
+  ES modules will not load from `file://`.
 
 ## Structure
 
 - `index.html` is only a meta-refresh redirect to the club's main site.
-- `raffle/` is the only real page. `raffle.js` owns the DOM, fetch, and polling. `tickets.js`, `data.js`, `source.js`, and
-  `markdown.js` are pure modules with no DOM access; keep logic that can be unit tested in those.
+- `raffle/` is the results page. `raffle.js` owns the DOM, fetch, and polling. `tickets.js`, `data.js`, `source.js`, and
+  `markdown.js` are pure modules with no DOM access; keep logic that can be unit tested in those. `render.js` turns parsed
+  Markdown into DOM and is shared with the editor.
+- `raffle/edit/` is the organizers' editor. `edit.js` owns the DOM and fetch; `editor.js` is pure. It POSTs JSON to the same
+  Apps Script URL (`doPost` in `Code.gs`) with `Content-Type: text/plain` so there is no CORS preflight. The password lives in
+  the Sheet's Settings tab as `Editor password` and is stripped from the public feed.
 - The data source is a Google Apps Script web app that dumps a Google Sheet as JSON. The script returns every
   column keyed by header text, so the page, not the script, decides which columns matter. Header matching in
   `data.js` is case-insensitive.
