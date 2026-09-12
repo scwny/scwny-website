@@ -77,10 +77,14 @@ Common fields in every request:
 
 - `basket` is required and is matched against the Basket column the same way
   `onPhotoSubmit` does (trimmed, exact string, `Basket` or `Basket #` header).
-- Only headers present in `fields` are written. A header that does not exist in the
-  sheet is appended as a new column, like `onPhotoSubmit` does for Photo.
+- Only headers present in `fields` are written, and only these four are accepted:
+  `Description`, `Winning Ticket`, `Details`, `Donated By`. A header that does not exist
+  in the sheet is appended as a new column, like `onPhotoSubmit` does for Photo.
 - An unknown basket number appends a new row with the number and the fields.
-- Every field the form shows is sent on every save, so last save wins per basket.
+- The page sends only the fields whose text changed since the basket was loaded, so two
+  people editing different fields of one basket do not clobber each other, and a ticket
+  typed into the Sheet during the drawing survives a Details edit made from a stale
+  form. If two people change the same field, the later save wins.
 
 **`photo`** attaches one picture:
 
@@ -154,8 +158,9 @@ The page has three states, switched by showing and hiding sections. No routing.
 2. **Basket list.** Loaded from the same feed URL the results page uses, through
    `resolveDataUrl`. Sorted with `compareBaskets`. Each row shows the number,
    description, and a thumbnail (or a grey placeholder). A search box filters by number
-   or description. An **Add basket** button opens an empty form. The list refetches
-   after each successful save and on a manual refresh button; it does not poll.
+   or description. An **Add basket** button opens an empty form. After a successful
+   save the list is updated from the row in the response; it refetches when the form is
+   closed and on a manual refresh button. It does not poll.
 3. **Basket form.** Fields, in order:
    - Basket: text input. Read-only for an existing basket. Required for a new one.
    - Description: single-line input. Required.
@@ -208,10 +213,10 @@ In `Code.gs`:
   `Editor password` setting, dispatch on `action`, wrap everything in try/catch that
   returns `{ ok: false, error }`. Hold the script lock for the duration of a write.
 - Pure helpers, written so they can run in the Node vm sandbox: `parseEditRequest(body)`
-  returning either a request object or an error string; `checkPassword(given, stored)`;
-  `upsertBasket(values, headers, basket, fields)` which returns `{ values, rowIndex,
-  newHeaders }` for a values grid, leaving the Sheet write to a thin caller; and
-  `driveViewUrl(id)`.
+  returning either a request object or an error string; `checkPassword(given, stored)`
+  returning `''` or an error string; `upsertBasket(values, basket, fields)` which returns
+  `{ headers, row, rowIndex }` for a values grid without mutating it, leaving the Sheet
+  write to a thin caller; `rowObject(headers, row)`; and `driveViewUrl(id)`.
 - `publicSettings` hides `Editor password` alongside `Photo uploaders`.
 - `readRows` is reused to build the `row` in the response.
 
