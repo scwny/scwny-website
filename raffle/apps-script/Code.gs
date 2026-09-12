@@ -9,6 +9,7 @@
  *         Execute as "Me", Who has access "Anyone".
  * Update: Deploy > Manage deployments > pencil > Version "New version" > Deploy.
  *         The URL stays the same.
+ * Writes: doPost handles the editor page at /raffle/edit. See SETUP.md "Editing baskets".
  */
 
 var BASKETS_SHEET = 'Baskets';
@@ -288,4 +289,60 @@ function upsertBasket(values, basket, fields) {
 
 function driveViewUrl(id) {
   return 'https://drive.google.com/file/d/' + id + '/view';
+}
+
+function doPost(e) {
+  var lock = LockService.getScriptLock();
+  var locked = false;
+  var result;
+  try {
+    var request = parseEditRequest(e && e.postData ? e.postData.contents : '');
+    if (typeof request === 'string') throw new Error(request);
+
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var stored = readSettings(ss.getSheetByName(SETTINGS_SHEET))[PASSWORD_SETTING];
+    var denied = checkPassword(request.password, stored);
+    if (denied) throw new Error(denied);
+
+    var sheet = ss.getSheetByName(BASKETS_SHEET);
+    if (!sheet) throw new Error('Sheet tab "' + BASKETS_SHEET + '" not found');
+
+    // Photo first, outside the lock: Drive is slow and does not touch the sheet.
+    var fields = request.action === 'photo' ? { Photo: storePhoto(request) } : request.fields;
+
+    lock.waitLock(20000);
+    locked = true;
+    var row = writeBasket(sheet, request.basket, fields);
+    CacheService.getScriptCache().remove(CACHE_KEY);
+    result = { ok: true, basket: request.basket, row: row };
+  } catch (err) {
+    result = { ok: false, error: String(err && err.message ? err.message : err) };
+  } finally {
+    if (locked) lock.releaseLock();
+  }
+  return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+}
+
+/** Read the sheet, upsert the basket, write the header row and that row back. */
+function writeBasket(sheet, basket, fields) {
+  var result = upsertBasket(sheet.getDataRange().getDisplayValues(), basket, fields);
+  var width = result.headers.length;
+  sheet.getRange(1, 1, 1, width).setValues([result.headers]);
+  sheet.getRange(result.rowIndex + 1, 1, 1, width).setValues([result.row]);
+  return rowObject(result.headers, result.row);
+}
+
+/** Decode the uploaded image, save it in the photo folder, share it, return its link. */
+function storePhoto(request) {
+  var bytes = Utilities.base64Decode(request.data);
+  if (bytes.length > MAX_PHOTO_BYTES) throw new Error('Photo too large');
+  var blob = Utilities.newBlob(bytes, request.type, request.name);
+  var file = photoFolder().createFile(blob);
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return driveViewUrl(file.getId());
+}
+
+function photoFolder() {
+  var folders = DriveApp.getFoldersByName(PHOTO_FOLDER);
+  return folders.hasNext() ? folders.next() : DriveApp.createFolder(PHOTO_FOLDER);
 }

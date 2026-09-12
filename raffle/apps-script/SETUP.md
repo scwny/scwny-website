@@ -115,6 +115,45 @@ Replaced photos stay in your Drive under **Basket photo (File responses)**. Dele
 folder after the event if you like; the page only needs the links that are still in the
 Sheet.
 
+## Editing baskets from the editor page
+
+The page at https://www.scwny.org/raffle/edit lets organizers type basket descriptions in
+a real text box with a preview, and take photos from a phone, without opening the Sheet.
+It writes into the same Baskets tab. The Sheet stays the master copy: anything you type
+there still works, and you can still use the photo Form.
+
+### One-time setup (about five minutes)
+
+1. In the raffle Sheet, **Settings** tab, add a row: A = `Editor password`, B = a password
+   of your choosing. This row never appears on the public page. Leaving it blank turns the
+   editor off.
+2. **Extensions > Apps Script**. Make sure the editor has the current `Code.gs` (it must
+   contain `doPost`). Save.
+3. **Deploy > Manage deployments**, click the pencil, set Version to **New version**, and
+   click **Deploy**. The URL stays the same. If Apps Script asks for new permissions
+   (Drive, for storing photos), allow them.
+4. Open https://www.scwny.org/raffle/edit, type the password, and you should see the
+   basket list. Send the page link and the password to the other organizers.
+
+### Using it
+
+- Tap a basket to edit it, or **Add basket** for a new one. **Save** writes the text.
+- **Take or choose photo** uploads right away. There is no need to press Save for a photo.
+  On a phone it opens the camera. Photos are shrunk before upload, so they take a few
+  seconds on venue Wi-Fi.
+- The preview under Details shows exactly what the results page will show.
+- Only the fields you changed are written, so two people can work on different parts of
+  the same basket. If two people change the same field, the later save wins.
+- Photos land in a Drive folder named **Raffle photos**, shared as anyone-with-link. A
+  replaced photo stays in the folder; delete the folder after the event if you like.
+- Wrong password or a blank `Editor password` row shows an error under the Save button.
+  **Log out** at the bottom of the page forgets the password on that device.
+
+### If something does not save
+
+Open the Apps Script editor, **Executions** in the left sidebar, and look at the latest
+`doPost` run. The error text there matches what the page showed.
+
 ## During the event
 
 - Give volunteers **edit** access to the Sheet. They do not need access to the script.
@@ -128,4 +167,4 @@ Sheet.
 
 Use **Deploy > Manage deployments**, click the pencil, set Version to **New version**,
 and click **Deploy**. The URL stays the same. Creating a *new deployment* instead makes
-a new URL and the page will need updating.
+a new URL and the page will need updating. The editor page's writes go to the same URL, so no site change is needed.
