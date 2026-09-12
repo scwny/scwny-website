@@ -14,6 +14,11 @@
 var BASKETS_SHEET = 'Baskets';
 var SETTINGS_SHEET = 'Settings';
 var UPLOADERS_SETTING = 'Photo uploaders'; // Settings row the feed hides; see onPhotoSubmit
+var PASSWORD_SETTING = 'Editor password'; // Settings row the editor page must match; see doPost
+var HIDDEN_SETTINGS = [UPLOADERS_SETTING, PASSWORD_SETTING];
+var TEXT_FIELDS = ['Description', 'Winning Ticket', 'Details', 'Donated By']; // columns `save` may write
+var PHOTO_FOLDER = 'Raffle photos'; // Drive folder for photos uploaded through the editor page
+var MAX_PHOTO_BYTES = 4 * 1024 * 1024;
 var CACHE_KEY = 'payload-v1';
 var CACHE_SECONDS = 5;
 
@@ -52,19 +57,23 @@ function readRows(sheet) {
   if (!sheet) throw new Error('Sheet tab "' + BASKETS_SHEET + '" not found');
   var values = sheet.getDataRange().getDisplayValues();
   if (values.length < 2) return [];
-  var headers = values[0].map(function (h) { return String(h).trim(); });
+  var headers = values[0];
   return values
     .slice(1)
     .filter(function (row) {
       return row.some(function (cell) { return String(cell).trim() !== ''; });
     })
-    .map(function (row) {
-      var obj = {};
-      headers.forEach(function (header, i) {
-        if (header) obj[header] = String(row[i] == null ? '' : row[i]).trim();
-      });
-      return obj;
-    });
+    .map(function (row) { return rowObject(headers, row); });
+}
+
+/** One sheet row as the feed returns it: keyed by trimmed header, blank headers skipped. */
+function rowObject(headers, row) {
+  var obj = {};
+  headers.forEach(function (header, i) {
+    var key = String(header == null ? '' : header).trim();
+    if (key) obj[key] = String(row[i] == null ? '' : row[i]).trim();
+  });
+  return obj;
 }
 
 function readSettings(sheet) {
@@ -77,11 +86,12 @@ function readSettings(sheet) {
   return settings;
 }
 
-/** Settings minus rows that are for the script only, such as the uploader emails. */
+/** Settings minus rows that are for the script only: uploader emails and the editor password. */
 function publicSettings(settings) {
+  var hidden = HIDDEN_SETTINGS.map(function (key) { return key.toLowerCase(); });
   var out = {};
   Object.keys(settings).forEach(function (key) {
-    if (key.trim().toLowerCase() !== UPLOADERS_SETTING.toLowerCase()) out[key] = settings[key];
+    if (hidden.indexOf(key.trim().toLowerCase()) < 0) out[key] = settings[key];
   });
   return out;
 }
@@ -168,7 +178,11 @@ function photoSubmission(namedValues) {
 
 /** Column index of a header, matching the aliases the page accepts, or -1. */
 function findColumn(headers, field) {
-  var aliases = { basket: ['basket', 'basket #'], photo: ['photo'] }[field] || [field];
+  var aliases = {
+    basket: ['basket', 'basket #'],
+    photo: ['photo'],
+    'winning ticket': ['winning ticket', 'winner'],
+  }[field] || [field];
   for (var i = 0; i < headers.length; i++) {
     var header = String(headers[i] == null ? '' : headers[i]).trim().toLowerCase().replace(/\s+/g, ' ');
     if (aliases.indexOf(header) >= 0) return i;
@@ -184,4 +198,94 @@ function findBasketRow(values, basketCol, basket) {
     if (String(values[r][basketCol] == null ? '' : values[r][basketCol]).trim() === wanted) return r;
   }
   return -1;
+}
+
+/* ---------- Basket editor page (raffle/edit) ----------
+ *
+ * The editor page POSTs JSON to this web app. Two actions: "save" writes text
+ * columns for one basket, "photo" stores an uploaded picture in Drive and writes
+ * its link into the Photo column. Both need the password from the Settings row
+ * "Editor password". The helpers here are pure so the unit tests can load them.
+ */
+
+/** '' when the password matches, otherwise the error to send back. */
+function checkPassword(given, stored) {
+  var expected = String(stored == null ? '' : stored).trim();
+  if (!expected) return 'Editing is disabled: no ' + PASSWORD_SETTING + ' in Settings';
+  if (String(given == null ? '' : given).trim() !== expected) return 'Wrong password';
+  return '';
+}
+
+/** Parse and validate a POST body. Returns a request object, or an error string. */
+function parseEditRequest(body) {
+  var data;
+  try {
+    data = JSON.parse(String(body || ''));
+  } catch (err) {
+    return 'Bad request';
+  }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return 'Bad request';
+  var action = String(data.action || '');
+  if (action !== 'save' && action !== 'photo') return 'Unknown action';
+  var basket = String(data.basket == null ? '' : data.basket).trim();
+  if (!basket) return 'Basket number is required';
+
+  var request = { action: action, password: String(data.password == null ? '' : data.password), basket: basket };
+  if (action === 'save') {
+    var given = data.fields && typeof data.fields === 'object' ? data.fields : {};
+    request.fields = {};
+    TEXT_FIELDS.forEach(function (name) {
+      if (Object.prototype.hasOwnProperty.call(given, name)) {
+        request.fields[name] = String(given[name] == null ? '' : given[name]);
+      }
+    });
+    return request;
+  }
+  request.name = String(data.name || 'photo.jpg');
+  request.type = String(data.type || 'image/jpeg');
+  request.data = String(data.data || '');
+  if (!request.data || !/^image\//.test(request.type)) return 'Bad request';
+  return request;
+}
+
+/**
+ * Pure: copy the values grid, write `fields` (keyed by header) into the basket's
+ * row, appending a row for a new basket and a header for a new column. The
+ * returned headers and row are padded to the same width so the caller can write
+ * them back with two setValues calls.
+ */
+function upsertBasket(values, basket, fields) {
+  var grid = (values || []).map(function (row) { return row.slice(); });
+  if (grid.length === 0) grid.push([]);
+  var headers = grid[0].map(function (h) { return String(h == null ? '' : h); });
+  var basketCol = findColumn(headers, 'basket');
+  if (basketCol < 0) throw new Error('No "Basket" header in ' + BASKETS_SHEET);
+
+  var rowIndex = findBasketRow(grid, basketCol, basket);
+  if (rowIndex < 0) {
+    rowIndex = grid.length;
+    grid.push([]);
+  }
+  var row = grid[rowIndex];
+
+  Object.keys(fields || {}).forEach(function (name) {
+    var col = findColumn(headers, name.toLowerCase());
+    if (col < 0) {
+      headers.push(name);
+      col = headers.length - 1;
+    }
+    row[col] = String(fields[name] == null ? '' : fields[name]);
+  });
+  row[basketCol] = String(basket).trim();
+
+  var width = Math.max(headers.length, row.length);
+  for (var i = 0; i < width; i++) {
+    if (headers[i] == null) headers[i] = '';
+    if (row[i] == null) row[i] = '';
+  }
+  return { headers: headers, row: row, rowIndex: rowIndex };
+}
+
+function driveViewUrl(id) {
+  return 'https://drive.google.com/file/d/' + id + '/view';
 }
