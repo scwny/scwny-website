@@ -317,6 +317,8 @@ function renderRow(row, anyPhoto, keepOpen) {
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
       const img = document.createElement('img');
+      // Google's image host answers 429 when the Referer is localhost, and Chrome then blocks the load.
+      img.referrerPolicy = 'no-referrer';
       img.src = urls.thumb;
       img.alt = `Photo of basket ${row.basket}`;
       img.loading = 'lazy';

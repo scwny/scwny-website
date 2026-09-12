@@ -222,6 +222,7 @@ function thumbnail(row) {
   const urls = photoUrls(row.photo);
   if (!urls) return placeholder();
   const img = document.createElement('img');
+  img.referrerPolicy = 'no-referrer'; // Google's image host answers 429 to a localhost Referer
   img.src = urls.thumb;
   img.alt = `Photo of basket ${row.basket}`;
   img.loading = 'lazy';
