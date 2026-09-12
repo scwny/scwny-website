@@ -11,10 +11,11 @@ export function isLocalHost(hostname) {
  * `?data=<http(s) url>` overrides the configured URL, but only on a local
  * development host, so a shared link cannot make the live site render
  * someone else's data.
+ * `demoUrl` is the path to the sample file relative to the calling page; the default suits `raffle/`.
  */
-export function resolveDataUrl({ search, hostname, defaultUrl }) {
+export function resolveDataUrl({ search, hostname, defaultUrl, demoUrl = './sample-data.json' }) {
   const params = new URLSearchParams(search ?? '');
-  if (params.get('demo') === '1') return './sample-data.json';
+  if (params.get('demo') === '1') return demoUrl;
   const override = params.get('data');
   if (override && isLocalHost(hostname) && /^https?:\/\//i.test(override)) return override;
   return defaultUrl ?? '';

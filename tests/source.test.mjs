@@ -42,3 +42,13 @@ test('data= override must be an http(s) URL', () => {
   assert.equal(resolveDataUrl({ search: '?data=', hostname: 'localhost', defaultUrl: CONFIGURED }), CONFIGURED);
   assert.equal(resolveDataUrl({ search: '?data=http://example.com/x.json', hostname: 'localhost', defaultUrl: CONFIGURED }), 'http://example.com/x.json');
 });
+
+test('resolveDataUrl returns the caller-supplied demo path when one is given', () => {
+  const url = resolveDataUrl({
+    search: '?demo=1',
+    hostname: 'www.scwny.org',
+    defaultUrl: 'https://script.google.com/x/exec',
+    demoUrl: '../sample-data.json',
+  });
+  assert.equal(url, '../sample-data.json');
+});
